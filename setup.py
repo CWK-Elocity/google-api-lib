@@ -12,5 +12,6 @@ setup(
     description="Utilities for working with Google services.",
     author="Patryk Skibniewski",
     author_email="patrykski07@gmail.com",
-    url="https://github.com/RyKaT07/google-api-lib",  # Zastąp swoim repozytorium
+    url="https://github.com/RyKaT07/google-api-lib",
+    python_requires=">=3.7"
 )
