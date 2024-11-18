@@ -1,0 +1,50 @@
+# google_cloud_utils/drive.py
+
+from googleapiclient.http import MediaIoBaseDownload
+from .auth import authenticate_with_cloud
+import io
+
+class DriveFile:
+    """Klasa do obsługi plików Google Drive."""
+
+    def __init__(self, file_id):
+        self.file_id = file_id
+        self.service = authenticate_with_cloud()
+        self.file_metadata = self.service.files().get(fileId=file_id, fields="parents").execute()
+
+    def get_parent_id(self):
+        """Pobiera ID folderu nadrzędnego."""
+        parent_ids = self.file_metadata.get('parents', [])
+        if parent_ids:
+            return parent_ids[0]
+        else:
+            raise FileNotFoundError("Parent was not found")
+        
+    def move_file_google_drive(self, new_folder_id):
+        """Przenosi plik do nowego folderu."""
+        update_args = {
+            "fileId": self.file_id,
+            "addParents": new_folder_id,
+            "fields": "id, parents" 
+        }
+
+        try:
+            parent_id = self.get_parent_id()
+            update_args["removeParents"] = parent_id
+        except FileNotFoundError:
+            pass
+
+        self.service.files().update(**update_args).execute()
+
+    def download_file(self):
+        """Pobiera plik z Google Drive."""
+        request = self.service.files().get_media(fileId=self.file_id)
+        data_file = io.BytesIO()
+        downloader = MediaIoBaseDownload(data_file, request)
+
+        done = False
+        while not done:
+            _, done = downloader.next_chunk()
+
+        data_file.seek(0)
+        return data_file
