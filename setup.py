@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="google_api_lib",
+    name="google-api-lib",
     version="0.1.0",
     packages=find_packages(),
     install_requires=[
