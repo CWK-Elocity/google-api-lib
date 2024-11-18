@@ -1,16 +1,18 @@
 # google_cloud_utils/drive.py
 
-from googleapiclient.http import MediaIoBaseDownload
+from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 from .auth import authenticate_with_cloud
 import io
 
 class DriveFile:
     """Klasa do obsługi plików Google Drive."""
 
-    def __init__(self, file_id):
+    def __init__(self, file_id=None):
         self.file_id = file_id
         self.service = authenticate_with_cloud()
-        self.file_metadata = self.service.files().get(fileId=file_id, fields="parents").execute()
+        self.file_metadata = None
+        if file_id:
+            self.service.files().get(fileId=file_id, fields="parents").execute()
 
     def get_parent_id(self):
         """Pobiera ID folderu nadrzędnego."""
@@ -48,3 +50,22 @@ class DriveFile:
 
         data_file.seek(0)
         return data_file
+    
+    def create_file_google_drive(self, name, mime_type, parent_folder_id, content):
+        """Tworzy nowy plik w Google Drive."""
+        file_metadata = {
+            "name": name,
+            "mimeType": mime_type,
+            "parents": [parent_folder_id]
+        }
+        media = MediaIoBaseUpload(io.BytesIO(content.encode()), mimetype=mime_type)
+        
+        created_file = self.service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields="id"
+        ).execute()
+
+        self.file_id = created_file.get("id")
+        self.file_metadata = self.service.files().get(fileId=self.file_id, fields="parents").execute()
+        return created_file.get("id")
