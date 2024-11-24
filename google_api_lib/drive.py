@@ -3,6 +3,7 @@
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 from .auth import authenticate_with_cloud
 import io
+import logging
 
 class DriveFile:
     """Klasa do obsługi plików Google Drive."""
@@ -53,17 +54,17 @@ class DriveFile:
     
     def create_file_google_drive(self, name, mime_type, parent_folder_id, content):
         """Creates a new file in Google Drive."""
-        print(f"Creating file: {name}")
-        print(f"Mime type: {mime_type}")
-        print(f"Parent folder ID: {parent_folder_id}")
-        print(f"Content length: {len(content)}")
+        logging.info(f"Creating file: {name}")
+        logging.info(f"Mime type: {mime_type}")
+        logging.info(f"Parent folder ID: {parent_folder_id}")
+        logging.info(f"Content length: {len(content)}")
 
         # Validate parent folder
         try:
             folder = self.service.files().get(fileId=parent_folder_id, fields="id, name").execute()
-            print(f"Parent folder found: {folder['name']}")
+            logging.info(f"Parent folder found: {folder['name']}")
         except Exception as e:
-            print(f"Error accessing parent folder: {e}")
+            logging.info(f"Error accessing parent folder: {e}")
             raise
 
         file_metadata = {
@@ -79,9 +80,9 @@ class DriveFile:
                 media_body=media,
                 fields="id"
             ).execute()
-            print(f"File created with ID: {created_file.get('id')}")
+            logging.info(f"File created with ID: {created_file.get('id')}")
         except Exception as e:
-            print(f"Error creating file: {e}")
+            logging.info(f"Error creating file: {e}")
             raise
 
         self.file_id = created_file.get("id")
