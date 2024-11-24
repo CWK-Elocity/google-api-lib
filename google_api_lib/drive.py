@@ -69,3 +69,24 @@ class DriveFile:
         self.file_id = created_file.get("id")
         self.file_metadata = self.service.files().get(fileId=self.file_id, fields="parents").execute()
         return created_file.get("id")
+    
+    def delete_file_by_name_and_folder(self, name, parent_folder_id):
+        """Deletes a file from Google Drive based on its name and folder."""
+
+        # Query to find the file in the specified folder
+        query = f"'{parent_folder_id}' in parents and name = '{name}' and trashed = false"
+        results = self.service.files().list(q=query, fields="files(id, name)").execute()
+        files = results.get('files', [])
+
+        # If the file exists, delete it
+        if files:
+            file_id_to_delete = files[0]['id']
+            try:
+                self.service.files().delete(fileId=file_id_to_delete).execute()
+                print(f"Deleted file: {name} with ID: {file_id_to_delete}")
+            except Exception as e:
+                print(f"Error deleting file: {e}")
+                raise
+        else:
+            print(f"No file found with name: {name} in folder: {parent_folder_id}")
+
