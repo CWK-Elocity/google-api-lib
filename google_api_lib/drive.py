@@ -52,7 +52,20 @@ class DriveFile:
         return data_file
     
     def create_file_google_drive(self, name, mime_type, parent_folder_id, content):
-        """Tworzy nowy plik w Google Drive."""
+        """Creates a new file in Google Drive."""
+        print(f"Creating file: {name}")
+        print(f"Mime type: {mime_type}")
+        print(f"Parent folder ID: {parent_folder_id}")
+        print(f"Content length: {len(content)}")
+
+        # Validate parent folder
+        try:
+            folder = self.service.files().get(fileId=parent_folder_id, fields="id, name").execute()
+            print(f"Parent folder found: {folder['name']}")
+        except Exception as e:
+            print(f"Error accessing parent folder: {e}")
+            raise
+
         file_metadata = {
             "name": name,
             "mimeType": mime_type,
@@ -60,12 +73,18 @@ class DriveFile:
         }
         media = MediaIoBaseUpload(io.BytesIO(content.encode()), mimetype=mime_type)
         
-        created_file = self.service.files().create(
-            body=file_metadata,
-            media_body=media,
-            fields="id"
-        ).execute()
+        try:
+            created_file = self.service.files().create(
+                body=file_metadata,
+                media_body=media,
+                fields="id"
+            ).execute()
+            print(f"File created with ID: {created_file.get('id')}")
+        except Exception as e:
+            print(f"Error creating file: {e}")
+            raise
 
         self.file_id = created_file.get("id")
         self.file_metadata = self.service.files().get(fileId=self.file_id, fields="parents").execute()
         return created_file.get("id")
+
