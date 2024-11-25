@@ -38,8 +38,45 @@ class DriveFile:
 
         self.service.files().update(**update_args).execute()
 
+
+
     def download_file(self):
-        """Pobiera plik z Google Drive."""
+        """Downloads a file from Google Drive."""
+        # Retrieve file metadata to check its MIME type
+        file_metadata = self.service.files().get(fileId=self.file_id, fields="mimeType, name").execute()
+        mime_type = file_metadata.get("mimeType")
+        file_name = file_metadata.get("name")
+        print(f"Downloading file: {file_name}, MIME Type: {mime_type}")
+
+        # If the file is a Google document (Docs, Sheets, etc.), use export
+        if mime_type == "application/vnd.google-apps.document":
+            export_mime_type = "application/pdf"  # Export to PDF
+        elif mime_type == "application/vnd.google-apps.spreadsheet":
+            export_mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"  # Export to Excel
+        elif mime_type == "application/json" or mime_type == "text/plain":
+            # JSON or plain text files can be downloaded directly
+            request = self.service.files().get_media(fileId=self.file_id)
+        else:
+            # For other MIME types, use standard download
+            request = self.service.files().get_media(fileId=self.file_id)
+
+        # If export is required, configure the appropriate request
+        if mime_type.startswith("application/vnd.google-apps"):
+            request = self.service.files().export_media(fileId=self.file_id, mimeType=export_mime_type)
+
+        # Download the file
+        data_file = io.BytesIO()
+        downloader = MediaIoBaseDownload(data_file, request)
+
+        done = False
+        while not done:
+            _, done = downloader.next_chunk()
+
+        data_file.seek(0)
+        return data_file
+
+    """ obsolete
+    def download_file(self):
         request = self.service.files().get_media(fileId=self.file_id)
         data_file = io.BytesIO()
         downloader = MediaIoBaseDownload(data_file, request)
@@ -50,6 +87,7 @@ class DriveFile:
 
         data_file.seek(0)
         return data_file
+        """
     
     def create_file_google_drive(self, name, mime_type, parent_folder_id, content):
         """Tworzy nowy plik w Google Drive."""
