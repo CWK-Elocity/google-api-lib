@@ -74,9 +74,7 @@ class DriveFile:
         """Deletes a file from Google Drive based on its name and folder."""
 
         # Query to find the file in the specified folder
-        query = f"'{parent_folder_id}' in parents and name = '{name}' and trashed = false"
-        results = self.service.files().list(q=query, fields="files(id, name)").execute()
-        files = results.get('files', [])
+        files = self.find_file_by_name(name, parent_folder_id)
 
         # If the file exists, delete it
         if files:
@@ -89,4 +87,16 @@ class DriveFile:
                 raise
         else:
             print(f"No file found with name: {name} in folder: {parent_folder_id}")
+
+    def find_file_by_name(self, name, parent_folder_id):
+        """Finds a file by name in folder."""
+        query = f"'{parent_folder_id}' in parents and name = '{name}' and trashed = false"
+        results = self.service.files().list(q=query, fields="files(id, name)").execute()
+        files = results.get('files', [])
+        
+        if files:
+            return files[0]  # Zwraca pierwszy znaleziony plik jako słownik {'id': ..., 'name': ...}
+        else:
+            return None  # Jeśli plik nie został znaleziony
+
 
