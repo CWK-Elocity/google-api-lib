@@ -93,8 +93,10 @@ class DriveFile:
         query = f"'{parent_folder_id}' in parents and name = '{name}' and trashed = false"
         results = self.service.files().list(q=query, fields="files(id, name)").execute()
         files = results.get('files', [])
-        
+
         if files:
+            found_file = files[0] 
+            self.file_id = found_file['id']
             return files[0]  # Zwraca pierwszy znaleziony plik jako słownik {'id': ..., 'name': ...}
         else:
             return None  # Jeśli plik nie został znaleziony
