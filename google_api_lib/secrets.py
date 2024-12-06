@@ -8,7 +8,7 @@ def access_secret(secret_id, project_id=None, version_id='latest'):
     if project_id is None:
         project_id = get_project_metadata("project-id")
         if project_id is None:
-            return None
+            return ValueError("Project ID is required.")
         
     try:
         client = secretmanager.SecretManagerServiceClient()
@@ -20,3 +20,22 @@ def access_secret(secret_id, project_id=None, version_id='latest'):
         print(f"Error while obtaining secret: {e}")
         return None
     return secret_value
+
+def save_secret(secret_id, data, project_id=None):
+    if project_id is None:
+        project_id = get_project_metadata("project-id")
+        if project_id is None:
+            return ValueError("Project ID is required.")
+
+    client = secretmanager.SecretManagerServiceClient()
+    parent = f"projects/{client.project}/secrets/{secret_id}/versions"
+
+    # Add new version with updated token
+    try:
+        response = client.add_secret_version(
+            request={"parent": parent, "payload": {"data": data.encode()}}
+        )
+        print(f"Token saved to Secret Manager: {response.name}")
+    except Exception as e:
+        print(f"Failed to save secret: {e}")
+        raise
