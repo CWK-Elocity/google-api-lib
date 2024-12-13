@@ -28,7 +28,7 @@ def save_secret(secret_id, data, project_id=None):
             return ValueError("Project ID is required.")
 
     client = secretmanager.SecretManagerServiceClient()
-    parent = f"projects/{client.project}/secrets/{secret_id}/versions"
+    parent = f"projects/{project_id}/secrets/{secret_id}/versions"
 
     # Add new version with updated token
     try:
