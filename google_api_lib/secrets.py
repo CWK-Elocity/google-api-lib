@@ -21,14 +21,14 @@ def access_secret(secret_id, project_id=None, version_id='latest'):
         return None
     return secret_value
 
-def save_secret(secret_id, data, project_id=None):
+def save_secret(secret_id, data, project_id=None, version_id='latest'):
     if project_id is None:
         project_id = get_project_metadata("project-id")
         if project_id is None:
             return ValueError("Project ID is required.")
 
     client = secretmanager.SecretManagerServiceClient()
-    parent = f"projects/{project_id}/secrets/{secret_id}/versions"
+    parent = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
 
     # Add new version with updated token
     try:
