@@ -62,3 +62,37 @@ def delete_secret_version(secret_id, version_id='latest', project_id=None):
     except Exception as e:
         print(f"Failed to delete secret version: {e}")
         raise
+
+def save_and_cleanup_secret(secret_id, data, project_id=None):
+    if project_id is None:
+        project_id = get_project_metadata("project-id")
+        if project_id is None:
+            return ValueError("Project ID is required.")
+
+    try:
+        # Zapisz nową wersję sekretu
+        save_secret(secret_id=secret_id, data=data, project_id=project_id)
+
+        # Pobierz wszystkie wersje sekretu, aby znaleźć starszą wersję
+        client = secretmanager.SecretManagerServiceClient()
+        parent = f"projects/{project_id}/secrets/{secret_id}"
+        versions = client.list_secret_versions(parent=parent)
+
+        # Znajdź najnowszą wersję i wersję starszą o jeden
+        versions_sorted = sorted(
+            (v for v in versions if v.state.name == "ENABLED"),
+            key=lambda v: int(v.name.split('/')[-1]),
+            reverse=True
+        )
+
+        if len(versions_sorted) > 1:
+            previous_version = versions_sorted[1].name.split('/')[-1]
+
+            # Usuń starszą wersję
+            delete_secret_version(secret_id=secret_id, version_id=previous_version, project_id=project_id)
+        else:
+            print("No older secret version to delete.")
+
+    except Exception as e:
+        print(f"Error during secret update or cleanup: {e}")
+        raise
