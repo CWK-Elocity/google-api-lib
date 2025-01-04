@@ -39,3 +39,26 @@ def save_secret(secret_id, data, project_id=None):
     except Exception as e:
         print(f"Failed to save secret: {e}")
         raise
+
+def delete_secret_version(secret_id, version_id='latest', project_id=None):
+    if project_id is None:
+        project_id = get_project_metadata("project-id")
+        if project_id is None:
+            return ValueError("Project ID is required.")
+    
+    try:
+        client = secretmanager.SecretManagerServiceClient()
+
+        # Pobierz wersję latest, jeśli to konieczne
+        if version_id == 'latest':
+            latest_secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
+            latest_secret = client.access_secret_version(name=latest_secret_name)
+            version_id = latest_secret.name.split('/')[-1]  # Wyodrębnij ID wersji
+
+        # Usuń wybraną wersję
+        name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+        client.destroy_secret_version(request={"name": name})
+        print(f"Secret version {version_id} deleted.")
+    except Exception as e:
+        print(f"Failed to delete secret version: {e}")
+        raise
