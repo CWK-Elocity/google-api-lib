@@ -113,6 +113,7 @@ class DriveFile:
 
         # Query to find the file in the specified folder
         files = self.find_file_by_name(name, parent_folder_id)
+        print(f"File found: {files}")
 
         # If the file exists, delete it
         if files:
