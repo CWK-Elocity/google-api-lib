@@ -139,7 +139,7 @@ class DriveFile:
         if files:
             found_file = files[0] 
             self.file_id = found_file['id']
-            return files[0]  # Zwraca pierwszy znaleziony plik jako słownik {'id': ..., 'name': ...}
+            return files  # Zwraca pierwszy znaleziony plik jako słownik {'id': ..., 'name': ...}
         else:
             return None  # Jeśli plik nie został znaleziony
 
