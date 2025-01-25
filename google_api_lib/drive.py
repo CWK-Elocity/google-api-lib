@@ -128,9 +128,12 @@ class DriveFile:
 
     def find_file_by_name(self, name, parent_folder_id):
         """Finds a file by name in folder."""
-        query = f"'{parent_folder_id}' in parents and name = '{name}' and trashed = false"
-        results = self.service.files().list(q=query, fields="files(id, name)").execute()
-        files = results.get('files', [])
+        try:
+            query = f"'{parent_folder_id}' in parents and name = '{name}' and trashed = false"
+            results = self.service.files().list(q=query, fields="files(id, name)").execute()
+            files = results.get('files', [])
+        except Exception as e:
+            ValueError(f"Error during finding file named: {name} in folder_id: {parent_folder_id}. Error code: {e}")
 
         if files:
             found_file = files[0] 
