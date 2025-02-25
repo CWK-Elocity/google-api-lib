@@ -13,8 +13,10 @@ def access_secret(secret_id, project_id=None, version_id='latest'):
     try:
         client = secretmanager.SecretManagerServiceClient()
         name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+        print(f"Accessing secret: {name}")
         response = client.access_secret_version(name=name)
         secret_value = response.payload.data.decode("UTF-8")
+        print(f"Secret accessed from version: {version_id}")
         return secret_value
     except Exception as e:
         print(f"Error while obtaining secret: {e}")
@@ -35,6 +37,31 @@ def save_secret(secret_id, data, project_id=None):
             request={"parent": parent, "payload": {"data": data.encode()}}
         )
         print(f"Token saved to Secret Manager: {response.name}")
+    except Exception as e:
+        print(f"Failed to save secret: {e}")
+        raise
+
+def save_secret_debug(secret_id, data, project_id=None):
+    if project_id is None:
+        project_id = get_project_metadata("project-id")
+        if project_id is None:
+            raise ValueError("Project ID is required.")
+
+    client = secretmanager.SecretManagerServiceClient()
+    parent = f"projects/{project_id}/secrets/{secret_id}"
+
+    try:
+        print(f"Saving secret to {parent}")
+        response = client.add_secret_version(
+            request={"parent": parent, "payload": {"data": data.encode()}}
+        )
+        print(f"Token saved to Secret Manager: {response.name}")
+
+        print("Fetching versions after saving:")
+        versions = client.list_secret_versions(parent=parent)
+        for version in versions:
+            print(f"Version: {version.name}, State: {version.state.name}")
+
     except Exception as e:
         print(f"Failed to save secret: {e}")
         raise
