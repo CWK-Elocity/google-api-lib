@@ -11,6 +11,7 @@ class DriveFile:
         self.file_id = file_id
         self.service = authenticate_with_cloud()
         self.file_metadata = None
+        self.file_name = None
         if file_id:
             self.service.files().get(fileId=file_id, fields="parents").execute()
 
@@ -46,6 +47,7 @@ class DriveFile:
         file_metadata = self.service.files().get(fileId=self.file_id, fields="mimeType, name").execute()
         mime_type = file_metadata.get("mimeType")
         file_name = file_metadata.get("name")
+        self.file_name = file_name
         print(f"Downloading file: {file_name}, MIME Type: {mime_type}")
 
         # If the file is a Google document (Docs, Sheets, etc.), use export
